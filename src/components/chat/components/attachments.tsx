@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Paperclip, X } from "lucide-react";
+import { FileText, X } from "lucide-react";
 
 interface Attachment {
   id: string;
