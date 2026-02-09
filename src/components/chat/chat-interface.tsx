@@ -9,8 +9,10 @@ import { ReasoningComponent } from "./components/reasoning";
 import { SuggestionComponent } from "./components/suggestions";
 import { TypingIndicator } from "./components/typing-indicator";
 import { StreamingLoader } from "./components/streaming-loader";
+import { BranchComponent } from "./components/branch";
+import { AttachmentComponent } from "./components/attachments";
 import { useEffect, useRef, useState } from "react";
-import { Send, Bot, User, Sparkles, Loader2 } from "lucide-react";
+import { Send, Bot, User, Sparkles, Loader2, Paperclip } from "lucide-react";
 
 export function ChatInterface() {
   const [input, setInput] = useState("");
@@ -40,11 +42,16 @@ export function ChatInterface() {
     sendMessage({ text: suggestion });
   };
 
+  const handleBranch = () => {
+    console.log("Forking conversation...");
+    // In a real app, this would trigger a state change or API call
+  };
+
   const initialSuggestions = [
     "Plan a React portfolio app",
+    "What's the weather in Tokyo?",
     "Research latest AI trends in 2024",
-    "Fix a Python bug in a data script",
-    "How to build a SaaS MVP?"
+    "Fix a Python bug in a data script"
   ];
 
   return (
@@ -78,9 +85,9 @@ export function ChatInterface() {
                 <Bot className="w-12 h-12 text-muted-foreground/40" />
               </div>
               <div className="max-w-xs">
-                <h3 className="text-sm font-bold">Welcome to Sheikh OSS</h3>
-                <p className="text-xs text-muted-foreground mt-1 mb-4">
-                  I coordinate multiple agents to solve complex problems. Try one of the suggestions below:
+                <h3 className="text-sm font-bold text-primary mb-1">Welcome to Sheikh OSS / স্বাগতম</h3>
+                <p className="text-xs text-muted-foreground mb-4">
+                  I coordinate multiple agents to architect solutions. Try a suggestion:
                 </p>
                 <SuggestionComponent suggestions={initialSuggestions} onSelect={handleSuggestionSelect} />
               </div>
@@ -99,15 +106,19 @@ export function ChatInterface() {
                 {m.parts.map((part, i) => {
                   if (part.type === "text") {
                     return (
-                      <div
-                        key={i}
-                        className={`rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm animate-in fade-in slide-in-from-bottom-1 duration-300 ${
-                          m.role === "user"
-                            ? "bg-primary text-primary-foreground rounded-tr-none"
-                            : "bg-muted text-foreground rounded-tl-none border"
-                        }`}
-                      >
-                        {part.text}
+                      <div key={i} className="group flex flex-col items-start">
+                        <div
+                          className={`rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm animate-in fade-in slide-in-from-bottom-1 duration-300 ${
+                            m.role === "user"
+                              ? "bg-primary text-primary-foreground rounded-tr-none"
+                              : "bg-muted text-foreground rounded-tl-none border"
+                          }`}
+                        >
+                          {part.text}
+                        </div>
+                        {m.role === "assistant" && part.state === "done" && (
+                            <BranchComponent onBranch={handleBranch} />
+                        )}
                       </div>
                     );
                   }
@@ -117,6 +128,9 @@ export function ChatInterface() {
                         <ToolInvocationCard toolInvocation={part as any} />
                       </div>
                     );
+                  }
+                  if (part.type === "reasoning") {
+                      return <ReasoningComponent key={i} reasoning={part.text} />;
                   }
                   return null;
                 })}
@@ -141,6 +155,9 @@ export function ChatInterface() {
       {/* Input Area */}
       <form onSubmit={handleSubmit} className="p-5 border-t bg-muted/10">
         <div className="flex gap-2 p-1.5 rounded-2xl border bg-background shadow-inner focus-within:ring-2 focus-within:ring-primary/20 transition-all duration-200">
+            <Button variant="ghost" size="icon" className="text-muted-foreground rounded-xl" type="button">
+                <Paperclip className="w-4 h-4" />
+            </Button>
             <Input
               value={input}
               placeholder="What's the plan for today?"
@@ -164,7 +181,7 @@ export function ChatInterface() {
             </Button>
         </div>
         <p className="text-[9px] text-center mt-3 text-muted-foreground font-medium uppercase tracking-widest">
-            Powered by Sheikh OSS Agent Loop
+            Powered by Sheikh OSS Agent Loop • Plan-Act-Verify
         </p>
       </form>
     </div>
