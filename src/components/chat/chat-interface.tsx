@@ -5,6 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ToolInvocationCard } from "./tool-invocation";
+import { ReasoningComponent } from "./components/reasoning";
+import { SuggestionComponent } from "./components/suggestions";
+import { TypingIndicator } from "./components/typing-indicator";
+import { StreamingLoader } from "./components/streaming-loader";
 import { useEffect, useRef, useState } from "react";
 import { Send, Bot, User, Sparkles, Loader2 } from "lucide-react";
 
@@ -13,7 +17,7 @@ export function ChatInterface() {
   const { messages, sendMessage, status } = useChat();
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const isLoading = status !== "ready";
+  const isStreaming = status === "streaming" || status === "submitted";
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -22,18 +26,29 @@ export function ChatInterface() {
         scrollContainer.scrollTop = scrollContainer.scrollHeight;
       }
     }
-  }, [messages]);
+  }, [messages, status]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
+  const handleSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!input.trim() || isStreaming) return;
 
     sendMessage({ text: input });
     setInput("");
   };
 
+  const handleSuggestionSelect = (suggestion: string) => {
+    sendMessage({ text: suggestion });
+  };
+
+  const initialSuggestions = [
+    "Plan a React portfolio app",
+    "Research latest AI trends in 2024",
+    "Fix a Python bug in a data script",
+    "How to build a SaaS MVP?"
+  ];
+
   return (
-    <div className="flex flex-col h-[700px] w-full max-w-3xl mx-auto border rounded-2xl overflow-hidden bg-background shadow-2xl transition-all duration-300 ring-1 ring-border">
+    <div className="flex flex-col h-[750px] w-full max-w-3xl mx-auto border rounded-2xl overflow-hidden bg-background shadow-2xl transition-all duration-300 ring-1 ring-border">
       {/* Header */}
       <div className="p-5 border-b bg-gradient-to-r from-primary/10 via-primary/5 to-transparent flex items-center gap-3">
         <div className="p-2 rounded-xl bg-primary text-primary-foreground shadow-lg">
@@ -58,15 +73,16 @@ export function ChatInterface() {
       <ScrollArea className="flex-1 px-6 py-6" ref={scrollRef}>
         <div className="space-y-8 pb-4">
           {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-20 text-center space-y-4 animate-in fade-in zoom-in duration-500">
+            <div className="flex flex-col items-center justify-center py-20 text-center space-y-6 animate-in fade-in zoom-in duration-500">
               <div className="p-4 rounded-full bg-muted/50 border border-dashed">
                 <Bot className="w-12 h-12 text-muted-foreground/40" />
               </div>
               <div className="max-w-xs">
-                <h3 className="text-sm font-bold">No messages yet</h3>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Ask me to research a topic, write some code, or plan a project. I'll use multiple agents to get it done.
+                <h3 className="text-sm font-bold">Welcome to Sheikh OSS</h3>
+                <p className="text-xs text-muted-foreground mt-1 mb-4">
+                  I coordinate multiple agents to solve complex problems. Try one of the suggestions below:
                 </p>
+                <SuggestionComponent suggestions={initialSuggestions} onSelect={handleSuggestionSelect} />
               </div>
             </div>
           )}
@@ -85,7 +101,7 @@ export function ChatInterface() {
                     return (
                       <div
                         key={i}
-                        className={`rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
+                        className={`rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm animate-in fade-in slide-in-from-bottom-1 duration-300 ${
                           m.role === "user"
                             ? "bg-primary text-primary-foreground rounded-tr-none"
                             : "bg-muted text-foreground rounded-tl-none border"
@@ -108,14 +124,14 @@ export function ChatInterface() {
             </div>
           ))}
 
-          {isLoading && !messages.some(m => m.role === 'assistant' && m.parts.some(p => p.type === 'text' && p.text)) && (
-             <div className="flex gap-4 animate-pulse">
-                <div className="flex-none w-8 h-8 rounded-lg bg-muted border flex items-center justify-center">
-                    <Bot className="w-4 h-4 text-muted-foreground" />
-                </div>
-                <div className="flex flex-col gap-2">
-                    <div className="h-8 w-32 bg-muted rounded-2xl" />
-                    <div className="h-4 w-48 bg-muted rounded-full" />
+          {isStreaming && (
+             <div className="space-y-4">
+                <StreamingLoader />
+                <div className="flex gap-4">
+                    <div className="flex-none w-8 h-8 rounded-lg bg-muted border flex items-center justify-center">
+                        <Bot className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <TypingIndicator />
                 </div>
              </div>
           )}
@@ -129,15 +145,15 @@ export function ChatInterface() {
               value={input}
               placeholder="What's the plan for today?"
               onChange={(e) => setInput(e.target.value)}
-              disabled={isLoading}
+              disabled={isStreaming}
               className="flex-1 border-none shadow-none focus-visible:ring-0 bg-transparent"
             />
             <Button
                 type="submit"
-                disabled={isLoading || !input.trim()}
+                disabled={isStreaming || !input.trim()}
                 className="rounded-xl shadow-lg px-4 h-10 transition-all active:scale-95"
             >
-              {isLoading ? (
+              {isStreaming ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
@@ -148,7 +164,7 @@ export function ChatInterface() {
             </Button>
         </div>
         <p className="text-[9px] text-center mt-3 text-muted-foreground font-medium uppercase tracking-widest">
-            Powered by Vercel AI SDK & Multi-Agent Orchestrator
+            Powered by Sheikh OSS Agent Loop
         </p>
       </form>
     </div>
