@@ -1,6 +1,7 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
+import { Message, ToolInvocation } from "ai";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,6 +10,7 @@ import { ReasoningComponent } from "./components/reasoning";
 import { SuggestionComponent } from "./components/suggestions";
 import { TypingIndicator } from "./components/typing-indicator";
 import { StreamingLoader } from "./components/streaming-loader";
+import { BranchComponent } from "./components/branch";
 import { useEffect, useRef, useState } from "react";
 import { Send, Bot, User, Sparkles, Loader2 } from "lucide-react";
 
@@ -70,7 +72,7 @@ export function ChatInterface() {
       </div>
 
       {/* Message Area */}
-      <ScrollArea className="flex-1 px-6 py-6" ref={scrollRef}>
+      <ScrollArea className="flex-1 px-6 py-6" ref={scrollRef} aria-label="Chat history" role="log">
         <div className="space-y-8 pb-4">
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center py-20 text-center space-y-6 animate-in fade-in zoom-in duration-500">
@@ -87,42 +89,49 @@ export function ChatInterface() {
             </div>
           )}
 
-          {messages.map((m) => (
-            <div key={m.id} className={`flex gap-4 ${m.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
-              <div className={`flex-none w-8 h-8 rounded-lg flex items-center justify-center shadow-sm border ${
-                m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
-              }`}>
-                {m.role === "user" ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
-              </div>
+          {messages.map((m: Message) => {
+            const reasoning = (m as { reasoning?: string }).reasoning;
+            return (
+              <div key={m.id} className={`flex gap-4 ${m.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
+                <div className={`flex-none w-8 h-8 rounded-lg flex items-center justify-center shadow-sm border ${
+                  m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
+                }`}>
+                  {m.role === "user" ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+                </div>
 
-              <div className={`flex flex-col max-w-[85%] space-y-2 ${m.role === "user" ? "items-end" : "items-start"}`}>
-                {m.parts.map((part, i) => {
-                  if (part.type === "text") {
-                    return (
-                      <div
-                        key={i}
-                        className={`rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm animate-in fade-in slide-in-from-bottom-1 duration-300 ${
-                          m.role === "user"
-                            ? "bg-primary text-primary-foreground rounded-tr-none"
-                            : "bg-muted text-foreground rounded-tl-none border"
-                        }`}
-                      >
-                        {part.text}
-                      </div>
-                    );
-                  }
-                  if (part.type.startsWith("tool-")) {
-                    return (
-                      <div key={i} className="w-full">
-                        <ToolInvocationCard toolInvocation={part as any} />
-                      </div>
-                    );
-                  }
-                  return null;
-                })}
+                <div className={`flex flex-col max-w-[85%] space-y-2 ${m.role === "user" ? "items-end" : "items-start"}`}>
+                  {m.role === "assistant" && reasoning && (
+                    <ReasoningComponent reasoning={reasoning} />
+                  )}
+                  {m.parts.map((part, i) => {
+                    if (part.type === "text") {
+                      return (
+                        <div
+                          key={i}
+                          className={`rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm animate-in fade-in slide-in-from-bottom-1 duration-300 ${
+                            m.role === "user"
+                              ? "bg-primary text-primary-foreground rounded-tr-none"
+                              : "bg-muted text-foreground rounded-tl-none border"
+                          }`}
+                        >
+                          {part.text}
+                        </div>
+                      );
+                    }
+                    if (part.type === "tool-invocation") {
+                      return (
+                        <div key={i} className="w-full">
+                          <ToolInvocationCard toolInvocation={part.toolInvocation as ToolInvocation} />
+                        </div>
+                      );
+                    }
+                    return null;
+                  })}
+                  {m.role === "assistant" && <BranchComponent />}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {isStreaming && (
              <div className="space-y-4">
@@ -144,6 +153,7 @@ export function ChatInterface() {
             <Input
               value={input}
               placeholder="What's the plan for today?"
+              aria-label="Message input"
               onChange={(e) => setInput(e.target.value)}
               disabled={isStreaming}
               className="flex-1 border-none shadow-none focus-visible:ring-0 bg-transparent"
@@ -151,6 +161,7 @@ export function ChatInterface() {
             <Button
                 type="submit"
                 disabled={isStreaming || !input.trim()}
+                aria-label={isStreaming ? "Streaming in progress" : "Send message"}
                 className="rounded-xl shadow-lg px-4 h-10 transition-all active:scale-95"
             >
               {isStreaming ? (

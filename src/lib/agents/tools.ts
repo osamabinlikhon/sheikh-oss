@@ -27,7 +27,7 @@ export const coderTool = tool({
   })),
   execute: async ({ description, language }) => {
     return {
-      code: `// Code generated for: ${description}\n// Language: ${language || "typescript"}\n// ভেরিফাইড এবং প্রোডাকশন-রেডি লজিক\nfunction handleTask() {\n  try {\n    console.log("Task starting...");\n    // Implementation logic here\n    return { success: true };\n  } catch (error) {\n    console.error("Task failed:", error);\n    throw error;\n  }\n}`,
+      code: `// Code generated for: ${description}\n// Language: ${language || "typescript"}\n// ভেরিফাইড এবং প্রোডাকশন-রেডি লজিক\nfunction handleTask() {\n  try {\n    console.log("Task starting...");\n    // Implementation logic here\n    return { success: true };\n  } catch {\n    console.error("Task failed:", error);\n    throw error;\n  }\n}`,
     };
   },
 });
@@ -55,7 +55,7 @@ export const verifierTool = tool({
     task: z.string().describe("The original task."),
     output: z.string().describe("The output to verify."),
   })),
-  execute: async ({ task, output }) => {
+  execute: async ({ task }) => {
     // Strategic improvement: Show concise summary of fixes
     return {
       verified: true,
@@ -64,9 +64,44 @@ export const verifierTool = tool({
   },
 });
 
+export const weatherTool = tool({
+  description: "Get the current weather conditions and temperature for a specific city.",
+  inputSchema: zodSchema(z.object({
+    city: z.string().describe("The city name for weather lookup"),
+  })),
+  execute: async ({ city }) => {
+    try {
+      const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`);
+      const geoData = await geoRes.json();
+
+      if (!geoData.results || geoData.results.length === 0) {
+        return { error: `City '${city}' not found.` };
+      }
+
+      const { latitude, longitude, name, country } = geoData.results[0];
+
+      const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,weather_code`);
+      const weatherData = await weatherRes.json();
+
+      return {
+        city: name,
+        country,
+        temperature: weatherData.current.temperature_2m,
+        unit: "°C",
+        humidity: weatherData.current.relative_humidity_2m,
+        conditionCode: weatherData.current.weather_code,
+        summary: `আবহাওয়ার খবর: ${name} তে বর্তমানে তাপমাত্রা ${weatherData.current.temperature_2m}°C।`
+      };
+    } catch {
+      return { error: "Failed to fetch weather data." };
+    }
+  },
+});
+
 export const tools = {
   research: researcherTool,
   code: coderTool,
   plan: plannerTool,
   verify: verifierTool,
+  weather: weatherTool,
 };

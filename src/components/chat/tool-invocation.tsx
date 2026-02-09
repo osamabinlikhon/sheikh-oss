@@ -1,15 +1,21 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, CheckCircle2, Search, Code, ListTodo, ClipboardCheck, Info, ArrowRight } from "lucide-react";
+import { ToolInvocation } from "ai";
+import { Loader2, CheckCircle2, Search, Code, ListTodo, ClipboardCheck, Info, ArrowRight, CloudSun } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { PlanOutput } from "./generative/plan";
+import { CodeOutput } from "./generative/code";
+import { ResearchOutput } from "./generative/research";
+import { VerifyOutput } from "./generative/verify";
+import { WeatherOutput } from "./generative/weather";
 
 interface ToolInvocationProps {
-  toolInvocation: any;
+  toolInvocation: ToolInvocation;
 }
 
 export function ToolInvocationCard({ toolInvocation }: ToolInvocationProps) {
-  const { toolName, toolCallId, state } = toolInvocation;
+  const { toolName, state } = toolInvocation;
 
   const name = toolName || (toolInvocation.type?.startsWith('tool-') ? toolInvocation.type.replace('tool-', '') : 'agent');
 
@@ -19,6 +25,7 @@ export function ToolInvocationCard({ toolInvocation }: ToolInvocationProps) {
       case "code": return <Code className="w-5 h-5 text-purple-500" />;
       case "plan": return <ListTodo className="w-5 h-5 text-orange-500" />;
       case "verify": return <ClipboardCheck className="w-5 h-5 text-green-500" />;
+      case "weather": return <CloudSun className="w-5 h-5 text-yellow-500" />;
       default: return <Info className="w-5 h-5 text-muted-foreground" />;
     }
   };
@@ -29,6 +36,7 @@ export function ToolInvocationCard({ toolInvocation }: ToolInvocationProps) {
       case "code": return "কোড জেনারেশন (Coder Agent)";
       case "plan": return "পরিকল্পনা তৈরি (Planner Agent)";
       case "verify": return "ফলাফল যাচাই (Verifier Agent)";
+      case "weather": return "আবহাওয়া আপডেট (Weather Agent)";
       default: return name.charAt(0).toUpperCase() + name.slice(1) + " Agent";
     }
   };
@@ -39,6 +47,7 @@ export function ToolInvocationCard({ toolInvocation }: ToolInvocationProps) {
         case "code": return "আপনার প্রয়োজন অনুযায়ী কোড তৈরি বা সংশোধন করা হচ্ছে";
         case "plan": return "জটিল কাজটি সম্পন্ন করার জন্য একটি ধাপভিত্তিক পরিকল্পনা তৈরি করা হচ্ছে";
         case "verify": return "চূড়ান্ত ফলাফল আপনার চাহিদার সাথে মিলছে কি না তা যাচাই করা হচ্ছে";
+        case "weather": return "কাঙ্ক্ষিত শহরের বর্তমান আবহাওয়া সম্পর্কে তথ্য সংগ্রহ করা হচ্ছে";
         default: return "ধাপটি সম্পন্ন করা হচ্ছে";
     }
   };
@@ -49,6 +58,7 @@ export function ToolInvocationCard({ toolInvocation }: ToolInvocationProps) {
         case "research": return "তথ্য বিশ্লেষণ করে পরবর্তী ধাপে যাওয়া হবে";
         case "code": return "কোডটির সঠিকতা যাচাই করা হবে";
         case "verify": return "ফলাফল সন্তোষজনক হলে কাজ শেষ হবে";
+        case "weather": return "আবহাওয়া অনুযায়ী পরবর্তী পরামর্শ প্রদান করা হবে";
         default: return "পরবর্তী ধাপে অগ্রসরের প্রস্তুতি";
     }
   };
@@ -57,7 +67,7 @@ export function ToolInvocationCard({ toolInvocation }: ToolInvocationProps) {
   const result = toolInvocation.result;
 
   return (
-    <Card className="my-6 border-none bg-muted/30 shadow-sm overflow-hidden ring-1 ring-border">
+    <Card className="my-6 border-none bg-muted/30 shadow-sm overflow-hidden ring-1 ring-border animate-in fade-in zoom-in-95 duration-300">
       <CardHeader className="py-3 px-5 flex flex-row items-center gap-3 bg-muted/50 border-b">
         <div className="p-2 rounded-full bg-background shadow-sm border">
           {getIcon()}
@@ -107,44 +117,18 @@ export function ToolInvocationCard({ toolInvocation }: ToolInvocationProps) {
 
             <div className="rounded-xl bg-background border p-4 shadow-inner">
               {name === "plan" && result.plan ? (
-                <div className="space-y-3">
-                  <div className="text-xs font-semibold text-primary mb-2">৪টি ধাপে ডেভেলপমেন্ট ওয়ার্কফ্লো ম্যাপ করা হয়েছে:</div>
-                  {result.plan.map((step: any) => (
-                    <div key={step.step} className="flex gap-3 group">
-                      <div className="flex-none w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold border border-primary/20 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                        {step.step}
-                      </div>
-                      <div className="text-sm leading-relaxed">{step.description}</div>
-                    </div>
-                  ))}
-                </div>
+                <PlanOutput plan={result.plan} />
               ) : name === "code" && result.code ? (
-                <div className="space-y-2">
-                   <div className="text-xs font-semibold text-primary">কোড জেনারেটেড ও ভেরিফাইড:</div>
-                   <div className="relative group">
-                     <pre className="p-3 rounded-lg bg-muted/20 text-xs font-mono leading-relaxed overflow-x-auto border">
-                        {result.code}
-                      </pre>
-                   </div>
-                </div>
+                <CodeOutput code={result.code} />
               ) : name === "research" ? (
-                <div className="space-y-2">
-                   <div className="text-xs font-semibold text-primary">রিসার্চ সম্পন্ন: ৩টি সোর্স থেকে ডেটা সংগ্রহ করা হয়েছে</div>
-                   <div className="text-sm leading-relaxed">
-                     {result.result || "তথ্য বিশ্লেষণ সম্পন্ন হয়েছে।"}
-                   </div>
-                </div>
+                <ResearchOutput result={result.result} sources={result.sources} />
               ) : name === "verify" ? (
-                <div className={`p-4 rounded-lg flex gap-3 ${result.verified ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'} border shadow-sm`}>
-                  {result.verified ? <CheckCircle2 className="w-5 h-5 flex-none" /> : <Info className="w-5 h-5 flex-none" />}
-                  <div className="space-y-1">
-                    <div className="font-bold text-xs uppercase tracking-wider">ভেরিফিকেশন রেজাল্ট:</div>
-                    <div className="text-sm leading-relaxed">{result.feedback}</div>
-                    {result.verified && <div className="text-[10px] opacity-80 mt-1 italic">২টি টাইপ এরর সংশোধন করা হয়েছে</div>}
-                  </div>
-                </div>
+                <VerifyOutput verified={result.verified} feedback={result.feedback} />
+              ) : name === "weather" ? (
+                <WeatherOutput {...result} />
               ) : (
                 <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                  {/* Fallback for unknown tools or result formats */}
                   {typeof result === 'string' ? result : result.result || JSON.stringify(result, null, 2)}
                 </div>
               )}
