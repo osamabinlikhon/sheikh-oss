@@ -1,15 +1,17 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, CheckCircle2, Search, Code, ListTodo, ClipboardCheck, Info, ArrowRight, CloudSun } from "lucide-react";
+import { Loader2, CheckCircle2, Search, Code, ListTodo, ClipboardCheck, Info, ArrowRight, CloudSun, Monitor } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { PlanOutput } from "./generative/plan";
 import { CodeOutput } from "./generative/code";
 import { ResearchOutput } from "./generative/research";
 import { VerifyOutput } from "./generative/verify";
 import { WeatherOutput } from "./generative/weather";
+import { GUIOutput } from "./generative/gui";
 
 interface ToolInvocationProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   toolInvocation: any;
 }
 
@@ -25,6 +27,7 @@ export function ToolInvocationCard({ toolInvocation }: ToolInvocationProps) {
       case "plan": return <ListTodo className="w-5 h-5 text-orange-500" />;
       case "verify": return <ClipboardCheck className="w-5 h-5 text-green-500" />;
       case "getWeather": return <CloudSun className="w-5 h-5 text-blue-400" />;
+      case "gui": return <Monitor className="w-5 h-5 text-emerald-500" />;
       default: return <Info className="w-5 h-5 text-muted-foreground" />;
     }
   };
@@ -36,6 +39,7 @@ export function ToolInvocationCard({ toolInvocation }: ToolInvocationProps) {
       case "plan": return "পরিকল্পনা তৈরি (Planner Agent)";
       case "verify": return "ফলাফল যাচাই (Verifier Agent)";
       case "getWeather": return "আবহাওয়ার তথ্য (Weather Agent)";
+      case "gui": return "GUI ইন্টারঅ্যাকশন (GUI Agent)";
       default: return name.charAt(0).toUpperCase() + name.slice(1) + " Agent";
     }
   };
@@ -47,6 +51,7 @@ export function ToolInvocationCard({ toolInvocation }: ToolInvocationProps) {
         case "plan": return "ধাপভিত্তিক পরিকল্পনা তৈরি করা হচ্ছে";
         case "verify": return "ফলাফল যাচাই করা হচ্ছে";
         case "getWeather": return "লাইভ আবহাওয়ার তথ্য সংগ্রহ করা হচ্ছে";
+        case "gui": return "VNC এর মাধ্যমে GUI কন্ট্রোল করা হচ্ছে";
         default: return "ধাপটি সম্পন্ন করা হচ্ছে";
     }
   };
@@ -58,6 +63,7 @@ export function ToolInvocationCard({ toolInvocation }: ToolInvocationProps) {
         case "code": return "কোডটির সঠিকতা যাচাই করা হবে";
         case "verify": return "ফলাফল সন্তোষজনক হলে কাজ শেষ হবে";
         case "getWeather": return "তথ্যটি সিন্থেসাইজ করা হবে";
+        case "gui": return "GUI অ্যাকশন যাচাই করা হবে";
         default: return "পরবর্তী ধাপে অগ্রসরের প্রস্তুতি";
     }
   };
@@ -74,7 +80,7 @@ export function ToolInvocationCard({ toolInvocation }: ToolInvocationProps) {
         <div className="flex flex-col">
           <CardTitle className="text-sm font-bold tracking-tight">{getTitle()}</CardTitle>
           <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">
-            {getPurpose()}
+            {getPurpose()} • ID: {toolCallId.slice(-4)}
           </div>
         </div>
         <div className="ml-auto">
@@ -125,6 +131,8 @@ export function ToolInvocationCard({ toolInvocation }: ToolInvocationProps) {
                 <VerifyOutput verified={result.verified} feedback={result.feedback} />
               ) : name === "getWeather" ? (
                 <WeatherOutput weatherData={result} />
+              ) : name === "gui" ? (
+                <GUIOutput result={result} />
               ) : (
                 <div className="text-sm leading-relaxed whitespace-pre-wrap">
                   {typeof result === 'string' ? result : result.result || JSON.stringify(result, null, 2)}

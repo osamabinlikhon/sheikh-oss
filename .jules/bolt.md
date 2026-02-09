@@ -1,0 +1,3 @@
+## 2025-02-09 - Moving Static Constants Outside Components
+**Learning:** React re-renders are triggered by state changes. Defining large static arrays or objects inside the component body causes them to be re-allocated in memory on every single render cycle. While often a micro-optimization, it becomes a performance bottleneck in high-frequency update scenarios like streaming chat interfaces, as it increases garbage collection pressure and can break `memo` optimization if these values are passed to sub-components.
+**Action:** Always move static configuration arrays (like `INITIAL_SUGGESTIONS`) or helper objects outside of the React component definition or memoize them with `useMemo` if they depend on props.

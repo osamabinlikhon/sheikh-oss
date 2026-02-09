@@ -737,3 +737,4 @@ Error [AI_InvalidPromptError]: Invalid prompt: The messages do not match the Mod
   }
 }
  POST /api/chat 200 in 587ms (compile: 189ms, render: 398ms)
+✓ Compiled in 2.7s

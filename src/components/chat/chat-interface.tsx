@@ -10,9 +10,15 @@ import { SuggestionComponent } from "./components/suggestions";
 import { TypingIndicator } from "./components/typing-indicator";
 import { StreamingLoader } from "./components/streaming-loader";
 import { BranchComponent } from "./components/branch";
-import { AttachmentComponent } from "./components/attachments";
 import { useEffect, useRef, useState } from "react";
 import { Send, Bot, User, Sparkles, Loader2, Paperclip } from "lucide-react";
+
+const INITIAL_SUGGESTIONS = [
+  "Plan a React portfolio app",
+  "What's the weather in Tokyo?",
+  "Research latest AI trends in 2024",
+  "Fix a Python bug in a data script",
+];
 
 export function ChatInterface() {
   const [input, setInput] = useState("");
@@ -46,13 +52,6 @@ export function ChatInterface() {
     console.log("Forking conversation...");
     // In a real app, this would trigger a state change or API call
   };
-
-  const initialSuggestions = [
-    "Plan a React portfolio app",
-    "What's the weather in Tokyo?",
-    "Research latest AI trends in 2024",
-    "Fix a Python bug in a data script"
-  ];
 
   return (
     <div className="flex flex-col h-[750px] w-full max-w-3xl mx-auto border rounded-2xl overflow-hidden bg-background shadow-2xl transition-all duration-300 ring-1 ring-border">
@@ -89,7 +88,10 @@ export function ChatInterface() {
                 <p className="text-xs text-muted-foreground mb-4">
                   I coordinate multiple agents to architect solutions. Try a suggestion:
                 </p>
-                <SuggestionComponent suggestions={initialSuggestions} onSelect={handleSuggestionSelect} />
+                <SuggestionComponent
+                  suggestions={INITIAL_SUGGESTIONS}
+                  onSelect={handleSuggestionSelect}
+                />
               </div>
             </div>
           )}
@@ -125,6 +127,7 @@ export function ChatInterface() {
                   if (part.type.startsWith("tool-")) {
                     return (
                       <div key={i} className="w-full">
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                         <ToolInvocationCard toolInvocation={part as any} />
                       </div>
                     );
@@ -155,30 +158,38 @@ export function ChatInterface() {
       {/* Input Area */}
       <form onSubmit={handleSubmit} className="p-5 border-t bg-muted/10">
         <div className="flex gap-2 p-1.5 rounded-2xl border bg-background shadow-inner focus-within:ring-2 focus-within:ring-primary/20 transition-all duration-200">
-            <Button variant="ghost" size="icon" className="text-muted-foreground rounded-xl" type="button">
-                <Paperclip className="w-4 h-4" />
-            </Button>
-            <Input
-              value={input}
-              placeholder="What's the plan for today?"
-              onChange={(e) => setInput(e.target.value)}
-              disabled={isStreaming}
-              className="flex-1 border-none shadow-none focus-visible:ring-0 bg-transparent"
-            />
-            <Button
-                type="submit"
-                disabled={isStreaming || !input.trim()}
-                className="rounded-xl shadow-lg px-4 h-10 transition-all active:scale-95"
-            >
-              {isStreaming ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <>
-                    <span className="hidden sm:inline mr-2">Send</span>
-                    <Send className="w-4 h-4" />
-                </>
-              )}
-            </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground rounded-xl"
+            type="button"
+            aria-label="Attach file"
+          >
+            <Paperclip className="w-4 h-4" />
+          </Button>
+          <Input
+            value={input}
+            placeholder="What's the plan for today?"
+            onChange={(e) => setInput(e.target.value)}
+            disabled={isStreaming}
+            className="flex-1 border-none shadow-none focus-visible:ring-0 bg-transparent"
+            aria-label="Chat input"
+          />
+          <Button
+            type="submit"
+            disabled={isStreaming || !input.trim()}
+            className="rounded-xl shadow-lg px-4 h-10 transition-all active:scale-95"
+            aria-label={isStreaming ? "AI is responding" : "Send message"}
+          >
+            {isStreaming ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <>
+                <span className="hidden sm:inline mr-2">Send</span>
+                <Send className="w-4 h-4" />
+              </>
+            )}
+          </Button>
         </div>
         <p className="text-[9px] text-center mt-3 text-muted-foreground font-medium uppercase tracking-widest">
             Powered by Sheikh OSS Agent Loop • Plan-Act-Verify
