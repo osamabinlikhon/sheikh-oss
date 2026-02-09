@@ -1,11 +1,8 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ToolInvocationCard } from "./tool-invocation";
-import { ReasoningComponent } from "./components/reasoning";
 import { SuggestionComponent } from "./components/suggestions";
 import { TypingIndicator } from "./components/typing-indicator";
 import { StreamingLoader } from "./components/streaming-loader";
@@ -111,10 +108,11 @@ export function ChatInterface() {
                       </div>
                     );
                   }
-                  if (part.type.startsWith("tool-")) {
+                  if (part.type === "tool-invocation") {
                     return (
                       <div key={i} className="w-full">
-                        <ToolInvocationCard toolInvocation={part as any} />
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                        <ToolInvocationCard toolInvocation={(part as any).toolInvocation} />
                       </div>
                     );
                   }
@@ -141,17 +139,17 @@ export function ChatInterface() {
       {/* Input Area */}
       <form onSubmit={handleSubmit} className="p-5 border-t bg-muted/10">
         <div className="flex gap-2 p-1.5 rounded-2xl border bg-background shadow-inner focus-within:ring-2 focus-within:ring-primary/20 transition-all duration-200">
-            <Input
+            <input
               value={input}
               placeholder="What's the plan for today?"
               onChange={(e) => setInput(e.target.value)}
               disabled={isStreaming}
-              className="flex-1 border-none shadow-none focus-visible:ring-0 bg-transparent"
+              className="flex-1 border-none shadow-none focus-visible:ring-0 bg-transparent px-3 outline-none"
             />
-            <Button
+            <button
                 type="submit"
                 disabled={isStreaming || !input.trim()}
-                className="rounded-xl shadow-lg px-4 h-10 transition-all active:scale-95"
+                className="rounded-xl shadow-lg px-4 h-10 transition-all active:scale-95 bg-primary text-primary-foreground flex items-center"
             >
               {isStreaming ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -161,7 +159,7 @@ export function ChatInterface() {
                     <Send className="w-4 h-4" />
                 </>
               )}
-            </Button>
+            </button>
         </div>
         <p className="text-[9px] text-center mt-3 text-muted-foreground font-medium uppercase tracking-widest">
             Powered by Sheikh OSS Agent Loop

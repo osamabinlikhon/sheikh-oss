@@ -55,7 +55,7 @@ export const verifierTool = tool({
     task: z.string().describe("The original task."),
     output: z.string().describe("The output to verify."),
   })),
-  execute: async ({ task, output }) => {
+  execute: async ({ task }) => {
     // Strategic improvement: Show concise summary of fixes
     return {
       verified: true,

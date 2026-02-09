@@ -45,6 +45,10 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+
+  --color-background-deep: #000000;
+  --color-surface-dark: #1a1a1a;
+  --color-surface-lighter: #262626;
 }
 
 :root {

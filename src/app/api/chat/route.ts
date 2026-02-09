@@ -1,5 +1,5 @@
 import { customOpenAI } from "@/lib/ai";
-import { streamText, stepCountIs } from "ai";
+import { streamText, stepCountIs, convertToModelMessages } from "ai";
 import { tools } from "@/lib/agents/tools";
 import { ORCHESTRATOR_SYSTEM_PROMPT } from "@/lib/agents/prompts";
 
@@ -11,7 +11,7 @@ export async function POST(req: Request) {
   const result = await streamText({
     model: customOpenAI(process.env.MODEL_NAME || "llama3"),
     system: ORCHESTRATOR_SYSTEM_PROMPT,
-    messages,
+    messages: await convertToModelMessages(messages),
     tools,
     stopWhen: stepCountIs(10),
   });
